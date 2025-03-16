@@ -4,7 +4,7 @@ class csvWriter {
     constructor(filePath) {
     }
 
-    async writeChunk(objects, filePath, headersWritten = false, append = true) {
+    async writeChunk(objects, filePath, headersWritten = false) {
         try {
             if (!Array.isArray(objects) || objects.length === 0) {
                 throw new Error("Chunk must be a non-empty array of objects");
@@ -19,7 +19,7 @@ class csvWriter {
             const csvWriter = createCsvWriter({
                 path: filePath,
                 header: Object.keys(objects[0]).map(key => ({ id: key, title: key })),
-                append: append,
+                append: true,
             });
             await csvWriter.writeRecords(objects);
             return { status : 'success' , message : 'Added Data to the CSV successfully.', file_path : filePath}
