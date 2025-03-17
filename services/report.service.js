@@ -3,7 +3,7 @@ const fileStream = require('../utils/file_stream.util')
 const config = require('../app.config')
 const arrayUtil = require('../utils/array.util')
 const csvUtil = require('../utils/csv.util')
-const { userGateway } = require('../gateway')
+const { userGateway, mysqluserGateway } = require('../gateway')
 class ReportService {
     async initReport(data){
         try{
@@ -13,9 +13,9 @@ class ReportService {
                 for(let index=0;index<splitUsers.length;index++){
                     await csvUtil.writeChunk(splitUsers[index],config.csv_output_path,index==0?true:false);
                 }
-                return { status : 'success' , message : 'CSV Created successfully.' }
+                return { status : 'success' , message : 'CSV Created successfully from the system data.' }
             } else if(data.generate_from=='mongodb'){
-                let {getUserList , closeCursor , cursor} = this.initUserCursor(6)
+                let {getUserList , closeCursor , cursor} = this.initMongoUserCursor(6)
                 let append = true
                 while(await cursor.hasNext()){
                     let userList = await getUserList()
@@ -23,7 +23,25 @@ class ReportService {
                     append = false
                 }
                 await closeCursor()
-                return { status : 'success' , message : 'CSV Created successfully.' }
+                return { status : 'success' , message : 'CSV Created successfully from mongodb.' }
+            } else if(data.generate_from=='mysql'){
+                let cursor = await mysqluserGateway.cursor({})
+                return new Promise((resolve, reject) => {
+                    let append = 0
+                    cursor.on('data',async (row) => {
+                        append++
+                        await csvUtil.writeChunk([row],config.csv_output_path,append==1?true:false);
+                    });
+                    cursor.on('end', () => {
+                        console.log('Query execution finished');
+                        return resolve({ status : 'success' , message : 'CSV Created successfully from mysql.'}); 
+                    });
+                    cursor.on('error', (err) => {
+                        connection.end(); 
+                        return reject({status :'failed' , error: err});
+                    });
+
+                })
             }
 
         } catch (error){
@@ -31,7 +49,7 @@ class ReportService {
         }
     }
 
-    initUserCursor(limit){
+    initMongoUserCursor(limit){
         let cursor = userGateway.cursor({projection:{_id:0}})
         async function getUserList(){
             let userList = []

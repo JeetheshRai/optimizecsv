@@ -13,17 +13,16 @@ class Database {
 
 
     async createConnection() {
-        this.regClient = new MongoClient(config.database.url)
+        this.regClient = new MongoClient(config.mongo_database.url)
         await this.regClient.connect()
-        console.log("\nESTABLISHED DATABASE CONNECTION");
+        console.log("\nESTABLISHED DATABASE CONNECTION TO MONGODB");
     }
 
     /**
-     * get collection based on encryption
      * @param {string} collection collection name 
      */
     getCollection(collection) {
-        return this.regClient.db(config.database.name).collection(collection);
+        return this.regClient.db(config.mongo_database.name).collection(collection);
     }
 
     async checkTopologyError(err) {

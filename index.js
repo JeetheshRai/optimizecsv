@@ -1,8 +1,9 @@
 const config = require('./app.config');
-const { database } = require('./database');
+const { database , mysql } = require('./database');
 const ReportService = require('./services/report.service');
 const file_streamUtil = require('./utils/file_stream.util');
     (async () => {
+        await mysql.initMysql()
         await database.start()
     if (!file_streamUtil.existsSync('./uploads')) {
         await file_streamUtil.createFolder('./uploads', { recursive: true });
