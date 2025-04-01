@@ -28,11 +28,19 @@ class ReportService {
                 let cursor = await mysqluserGateway.cursor({})
                 return new Promise((resolve, reject) => {
                     let append = 0
+                    let batch = [];
                     cursor.on('data',async (row) => {
-                        append++
-                        await csvUtil.writeChunk([row],config.csv_output_path,append==1?true:false);
+                        batch.push(row);
+                        if (batch.length === 10) {
+                            append++
+                            csvUtil.writeChunk(batch,config.csv_output_path,append==1?true:false);
+                            batch = [];
+                        }
                     });
                     cursor.on('end', () => {
+                        if (batch.length > 0) {
+                            csvUtil.writeChunk(batch,config.csv_output_path,false);
+                        }
                         console.log('Query execution finished');
                         return resolve({ status : 'success' , message : 'CSV Created successfully from mysql.'}); 
                     });
