@@ -2,3 +2,5 @@
 node_modules/
 uploads/
 testdata/users_2000.json
+.dockerignore
+Dockerfile
